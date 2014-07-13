@@ -77,7 +77,7 @@ create_or_update_user(Req, ClientID, ClientSecret, AccessToken, {ok, FacebookUse
 
 request_facebook_graphme_info(AccessToken) ->
     %% Construct the URL to access the graph API's /me page
-    Url="https://graph.facebook.com/me?fields=id,username,name&access_token="++AccessToken,
+    Url="https://graph.facebook.com/me?fields=id,name&access_token="++AccessToken,
     ?LOG_DEBUG("Url=~p",[Url]),
 
     %% Request the page
@@ -94,12 +94,7 @@ process_facebook_graphme_response(Resp) ->
             %% ID and the complete response.
             {FBInfo}=?JSON_DECODE(Body),
             ID = ?b2l(couch_util:get_value(<<"id">>, FBInfo)),
-            Username = case couch_util:get_value(<<"username">>, FBInfo) of
-                           undefined ->
-                               convert_name_to_username(?b2l(couch_util:get_value(<<"name">>, FBInfo)));
-                           FBUsername ->
-                               ?b2l(FBUsername)
-                       end,
+            Username = convert_name_to_username(?b2l(couch_util:get_value(<<"name">>, FBInfo))),
             WithRestrictions = xo_auth:apply_username_restrictions(Username),
             {ok, ID, WithRestrictions};
         _ ->
